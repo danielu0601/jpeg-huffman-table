@@ -14,10 +14,16 @@
 # Executables
 cos
 zigzag
+huff
+jpgdecoder
 
+*.exe
 *.out
 
 # Debug files
+*.jpg
+*.txt
+*.pdf
 
 # Kernel Module Compile Results
 
