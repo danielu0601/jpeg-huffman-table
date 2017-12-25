@@ -1,40 +1,26 @@
+#include "huff.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
-#define MAX 128
-#define INPUT_NUM 17
+// longest huffman code length
+#define MAX_BIT 16
+// max input number, i don't know what happen
+// if code length exceed 16 bit.
+#define MAX_INPUT 256
+/** Below is for debug **/
+//#define debug
+// 0 for random and 1 for fix input
 #define RANDOM 1
+// max random size
+#define MAX 128
+// random input number
+#define INPUT_NUM 16
 
-// Node of huffman tree
-typedef struct node {
-    int value;
-    struct node* left;
-    struct node* right;
-} Node;
-
-// Node of linked list
-typedef struct tmpNode {
-    int prob;
-    struct node* data;
-    struct tmpNode* prev;
-    struct tmpNode* next;
-} TmpNode;
-
-// Node of Recorded values
-typedef struct recNode {
-    int value;
-    struct recNode* next;
-} RecNode;
-
-// Input data
-int prob[2][INPUT_NUM];
-
-// Output data
-// 0 = lenght, 1 = CodeWord, 2 = Value
-int OutputData[256][3] = {0};
-
-// Print the linked list
+/**
+ * Print the linked list
+ * root1 : Input tree's root
+ */
 void Print( TmpNode* root1 ){
     puts("**** Print list start ****");
     TmpNode* tmp = root1;
@@ -50,7 +36,12 @@ void Print( TmpNode* root1 ){
     return ;
 }
 
-// integer to binary
+/**
+ * integer to binary
+ * len : codeword length
+ * num : codeword value
+ * output : codeword's binary
+ */
 void i2b( int len, int num, char* output ) {
     for( int i = 0; i < len; i++ ) {
         output[i] = '0' + ((num>>(len-i-1))&1);
@@ -59,10 +50,12 @@ void i2b( int len, int num, char* output ) {
     return ;
 }
 
-// Print the huffman tree
-// len : codeword length
-// num : codeword value
-// 010 -> len = 3, num = 0b010
+/**
+ * Print the huffman tree
+ * root : tree's root
+ * len : codeword length
+ * num : codeword value
+ */
 void PrintTree( Node *root, int len, int num ) {
     char output[32];
     if( root != NULL ) {
@@ -82,9 +75,12 @@ void PrintTree( Node *root, int len, int num ) {
     return ;
 }
 
-int recordedIdx[16] = {0};
-int recordedVal[16][256] = {0};
-// Read the huffman tree and record the length and value
+int recordedIdx[MAX_BIT] = {0};
+int recordedVal[MAX_BIT][MAX_INPUT] = {0};
+/**
+ * Read the huffman tree and record the length and value
+ * Above 2 variable is used to record.
+ */
 void ReadTree( Node* root, int len ) {
     if( root != NULL ) {
         if( root->value >= 0 ) {
@@ -98,64 +94,37 @@ void ReadTree( Node* root, int len ) {
     return ;
 }
 
-int main() {
-    // Generate the Input or use the default input
-    srand( time( NULL ) );
-    if( RANDOM == 0 ) {
-        puts("Random Input:");
-        for( int i = 0; i < INPUT_NUM; i++ ) {
-            prob[0][i] = i; // value
-            prob[1][i] = rand()%MAX; // prob
-            printf("%2d = %d\n", prob[0][i], prob[1][i] );
-        }
-    } else if ( RANDOM == 1 ) {
-        puts("Fixed Input:");
-        prob[0][ 0] = 0b00100000; prob[1][ 0] = 7;
-        prob[0][ 1] = 0b01100001; prob[1][ 1] = 5;
-        prob[0][ 2] = 0b01100101; prob[1][ 2] = 4;
-        prob[0][ 3] = 0b01101001; prob[1][ 3] = 3;
-        prob[0][ 4] = 0b01110011; prob[1][ 4] = 3;
-        prob[0][ 5] = 0b01101000; prob[1][ 5] = 2;
-        prob[0][ 6] = 0b01110000; prob[1][ 6] = 2;
-        prob[0][ 7] = 0b01110010; prob[1][ 7] = 2;
-        prob[0][ 8] = 0b01000011; prob[1][ 8] = 1;
-        prob[0][ 9] = 0b01010100; prob[1][ 9] = 1;
-        prob[0][10] = 0b01100011; prob[1][10] = 1;
-        prob[0][11] = 0b01100110; prob[1][11] = 1;
-        prob[0][12] = 0b01101100; prob[1][12] = 1;
-        prob[0][13] = 0b01101101; prob[1][13] = 1;
-        prob[0][14] = 0b01101110; prob[1][14] = 1;
-        prob[0][15] = 0b01101111; prob[1][15] = 1;
-        prob[0][16] = 0b01110111; prob[1][16] = 1;
-        for( int i = 0; i < INPUT_NUM; i++ ) {
-            printf("%c = %d\n", prob[0][i], prob[1][i] );
-        }
-    }
-    puts("\n\n");
-
+/**
+ * Main program
+ * input the length and probability and output the generated codeword
+ * intput_length : intput length
+ * prob :
+ * OutputData :
+ */
+void GenerateHuffmanTable( int input_length, int prob[][2], int OutputData[][3] ) {
     // Make a linked list of previous data and sort it.
     TmpNode *root1 = NULL;
-    for( int i = 0; i < INPUT_NUM; i++ ) {
+    for( int i = 0; i < input_length; i++ ) {
         TmpNode *tmp = root1;
         while( 1 ) {
             //printf("1:");
             if( root1 == NULL ) {
                 //printf("2a:");
                 root1 = (TmpNode*)malloc( sizeof(TmpNode) );
-                root1->prob = prob[1][i];
+                root1->prob = prob[i][1];
                 root1->data = (Node*)malloc( sizeof(Node) );
-                root1->data->value = prob[0][i];
+                root1->data->value = prob[i][0];
                 root1->data->left  = NULL;
                 root1->data->right = NULL;
                 root1->prev = NULL;
                 root1->next = NULL;
                 //printf("2b:");
-            } else if( tmp->prob > prob[1][i] ) {
+            } else if( tmp->prob > prob[i][1] ) {
                 //printf("3a:");
                 TmpNode* tmp2 = (TmpNode*)malloc( sizeof(TmpNode) );
-                tmp2->prob = prob[1][i];
+                tmp2->prob = prob[i][1];
                 tmp2->data = (Node*)malloc( sizeof(Node) );
-                tmp2->data->value = prob[0][i];
+                tmp2->data->value = prob[i][0];
                 tmp2->data->left  = NULL;
                 tmp2->data->right = NULL;
                 tmp2->prev = tmp->prev;
@@ -170,9 +139,9 @@ int main() {
             } else if( tmp->next == NULL ) {
                 //printf("4a:");
                 tmp->next = (TmpNode*)malloc( sizeof(TmpNode) );
-                tmp->next->prob = prob[1][i];
+                tmp->next->prob = prob[i][1];
                 tmp->next->data = (Node*)malloc( sizeof(Node) );
-                tmp->next->data->value = prob[0][i];
+                tmp->next->data->value = prob[i][0];
                 tmp->next->data->left  = NULL;
                 tmp->next->data->right = NULL;
                 tmp->next->prev = tmp;
@@ -195,7 +164,7 @@ int main() {
     puts("\n\n");
 
     // Generate of huffman tree
-    for( int i = INPUT_NUM-1; i > 0; i-- ) {
+    for( int i = input_length-1; i > 0; i-- ) {
         TmpNode *tmp1, *tmp2;
         tmp1 = root1;
         tmp2 = root1->next;
@@ -275,11 +244,56 @@ int main() {
         num <<= 1;
     }
 
-    return 0;
+    return ;
 }
 
-/*
+#ifdef debug
 int main() {
+    int input_length = INPUT_NUM;
+    // Input data
+    // [i][0] = value, [i][1] = appear times
+    int prob[MAX_INPUT][2];
+    // Output data
+    // 0 = lenght, 1 = CodeWord, 2 = Value
+    int OutputData[MAX_INPUT][3] = {0};
+
+    // Generate the Input or use the default input
+    if( RANDOM == 0 ) {
+        puts("Random Input:");
+        srand( time( NULL ) );
+        for( int i = 0; i < input_length; i++ ) {
+            prob[i][0] = i; // value
+            prob[i][1] = rand()%MAX; // prob
+            printf("%2d = %d\n", prob[i][0], prob[i][1] );
+        }
+    } else if ( RANDOM == 1 ) {
+        puts("Fixed Input:");
+        input_length = 17;
+        prob[ 0][0] = ' ', prob[ 0][1] = 7,
+        prob[ 1][0] = 'a', prob[ 1][1] = 5,
+        prob[ 2][0] = 'e', prob[ 2][1] = 4,
+        prob[ 3][0] = 'i', prob[ 3][1] = 3,
+        prob[ 4][0] = 's', prob[ 4][1] = 3,
+        prob[ 5][0] = 'h', prob[ 5][1] = 2,
+        prob[ 6][0] = 'p', prob[ 6][1] = 2,
+        prob[ 7][0] = 'r', prob[ 7][1] = 2,
+        prob[ 8][0] = 'C', prob[ 8][1] = 1,
+        prob[ 9][0] = 'T', prob[ 9][1] = 1,
+        prob[10][0] = 'c', prob[10][1] = 1,
+        prob[11][0] = 'f', prob[11][1] = 1,
+        prob[12][0] = 'l', prob[12][1] = 1,
+        prob[13][0] = 'm', prob[13][1] = 1,
+        prob[14][0] = 'n', prob[14][1] = 1,
+        prob[15][0] = 'o', prob[15][1] = 1,
+        prob[16][0] = 'w', prob[16][1] = 1;
+        for( int i = 0; i < input_length; i++ ) {
+            printf("%c = %d\n", prob[i][0], prob[i][1] );
+        }
+    }
+    puts("\n\n");
+
+    GenerateHuffmanTable( input_length, prob, OutputData );
+
     return 0;
 }
-*/
+#endif
