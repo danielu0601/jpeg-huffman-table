@@ -16,6 +16,7 @@ cos
 zigzag
 huff
 jpgdecoder
+jpg_huffman_table
 
 *.exe
 *.out

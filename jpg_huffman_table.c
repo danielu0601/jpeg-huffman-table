@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include "huff.h"
 
 #define MAX_X 2048
 #define MAX_Y 2048
@@ -409,7 +410,7 @@ void writebmpheader(FILE *fp) {
 int main( int argc, char *argv[] ) {
     /* check the input format */
     if( argc < 2 ) {
-        puts("./jpgdecoder filename");
+        puts("./jpg_huffman_table filename");
     }
 
     /* open the file stream for read and write */
